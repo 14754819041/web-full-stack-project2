@@ -1,0 +1,502 @@
+=== 微商城开发日志 ===
+
+[2024-03-xx] 数据库初始化
+------------------------------------
+1. 创建数据库和表
+- 创建数据库 mini_mall
+- 创建用户表 user
+- 创建分类表 category
+- 创建商品表 product
+执行命令：
+mysql -u root -p < src/main/resources/db/init.sql
+状态：✅ 完成
+
+2. 插入测试数据
+执行命令：
+mysql -u root -p mini_mall < src/main/resources/db/test_data.sql
+状态：✅ 完成
+
+[2024-03-xx] 接口测试
+------------------------------------
+1. 用户注册接口测试
+路径：POST /api/user/register
+请求命令：
+curl -X POST http://localhost:8080/api/user/register \
+-H "Content-Type: application/json" \
+-d "{\"username\":\"testuser\",\"password\":\"123456\",\"phone\":\"13800138000\"}"
+
+测试结果：
+- 初次测试失败 - 400 Bad Request，原因：缺少请求体数据
+- 二次测试失败 - 500 Error，原因：数据库连接失败，MySQL密码错误
+- 三次测试成功 - 200 Success，成功创建用户
+
+2. 用户登录接口测试
+路径：POST /api/user/login
+请求命令：
+curl -X POST "http://localhost:8080/api/user/login?username=testuser&password=123456"
+
+测试结果：
+- 测试成功 - 200 Success，成功登录
+
+[2024-03-xx] 安全性优化
+------------------------------------
+1. 用户密码加密
+- 添加Spring Security加密依赖
+- 使用BCryptPasswordEncoder进行密码加密
+- 创建UserDTO避免返回密码
+状态：⚡ 进行中
+
+后续测试：
+1. 测试新用户注册（密码会被加密存储）
+2. 测试使用加密后的密码登录
+
+[2024-03-xx] 分类模块开发
+------------------------------------
+1. 创建分类相关类
+- Category实体类
+- CategoryMapper接口
+- CategoryService接口及实现
+- CategoryController
+状态：✅ 完成
+
+2. 分类列表接口
+路径：GET /api/category/list
+功能：获取所有分类的平铺列表
+测试命令：
+curl "http://localhost:8080/api/category/list"
+测试结果：✅ 成功
+返回数据包含3个一级分类：手机数码、家用电器、电脑办公
+
+3. 分类树接口
+路径：GET /api/category/tree
+功能：获取树形结构的分类数据
+测试命令：
+curl "http://localhost:8080/api/category/tree"
+测试结果：✅ 成功
+注意：目前所有分类都是一级分类，需要添加子分类数据
+
+[2024-03-xx] 商品模块开发
+------------------------------------
+1. 数据维护
+- 清理重复数据
+- 重新插入测试数据
+执行命令：
+mysql -u root -p mini_mall < src/main/resources/db/clean_data.sql
+mysql -u root -p mini_mall < src/main/resources/db/test_data.sql
+mysql -u root -p mini_mall < src/main/resources/db/test_data_2.sql
+状态：✅ 完成
+
+2. 验证分类树结构
+测试命令：
+curl "http://localhost:8080/api/category/tree"
+测试结果：✅ 成功
+- 成功显示三个一级分类
+- 每个一级分类下显示对应的子分类
+
+3. 验证商品数据
+测试命令：
+curl "http://localhost:8080/api/product/list"
+测试结果：✅ 成功
+- 成功显示所有商品数据
+- 分页功能正常
+
+下一步开发计划：
+1. 商品搜索功能
+- 按关键字搜索
+- 按分类筛选
+测试命令：
+curl "http://localhost:8080/api/product/list?keyword=手机"
+curl "http://localhost:8080/api/product/list?categoryId=4"
+
+2. 商品详情功能
+- 获取单个商品的详细信息
+测试命令：
+curl "http://localhost:8080/api/product/detail/1"
+
+3. 优化显示
+- 在商品列表中显示分类名称
+- 添加商品排序功能（价格、销量）
+
+[2024-03-xx] 商品模块优化
+------------------------------------
+1. 修复问题
+- 优化关键字搜索逻辑
+  * 使用自定义SQL查询替代MyBatis-Plus的Wrapper
+  * 修复模糊查询的问题
+  * 优化查询性能
+
+2. 功能测试
+测试命令：
+
+# 测试商品名称搜索
+curl -G --data-urlencode "keyword=华为" "http://localhost:8080/api/product/list"
+
+# 测试描述关键字搜索
+curl -G --data-urlencode "keyword=5G" "http://localhost:8080/api/product/list"
+
+# 测试商品类型搜索
+curl -G --data-urlencode "keyword=手机" "http://localhost:8080/api/product/list"
+
+3. 下一步优化计划：
+- 添加搜索结果缓存
+- 实现商品分类的多级联动搜索
+- 添加商品标签搜索功能
+
+[2024-03-xx] 购物车模块开发
+------------------------------------
+1. 数据库设计
+- 创建购物车表(cart)
+- 添加必要的索引
+状态：✅ 完成
+
+2. 基础功能实现
+- 添加商品到购物车
+- 更新购物车商品数量
+- 删除购物车商品
+- 更新商品选中状态
+- 查看购物车列表
+状态：✅ 完成
+
+3. 业务逻辑验证
+- 商品存在性检查
+- 库存数量验证
+- 购物车商品总价计算
+状态：✅ 完成
+
+4. 接口测试
+测试命令：
+
+# 添加商品到购物车
+    curl -X POST "http://localhost:8080/api/cart/add?userId=1&productId=1&quantity=2"
+
+# 查看购物车列表
+curl "http://localhost:8080/api/cart/list?userId=1"
+
+# 更新商品数量
+curl -X PUT "http://localhost:8080/api/cart/update?userId=1&productId=1&quantity=3"
+
+# 删除购物车商品
+curl -X DELETE "http://localhost:8080/api/cart/delete?userId=1&productId=1"
+
+# 更新商品选中状态
+curl -X PUT "http://localhost:8080/api/cart/selected?userId=1&productId=1&selected=true"
+
+状态：⚡ 待测试
+
+下一步计划：
+1. 添加购物车商品数量上限限制
+2. 实现购物车商品批量操作
+3. 添加购物车商品有效期检查
+4. 实现购物车商品推荐功能
+
+5. 问题修复
+- 添加购物车表创建
+- 添加错误处理和日志记录
+- 添加参数验证
+
+6. 重新测试
+测试命令：
+# 先创建购物车表
+mysql -u root -p mini_mall < src/main/resources/db/cart.sql
+
+# 添加商品到购物车（使用已存在的商品ID）
+curl -X POST "http://localhost:8080/api/cart/add?userId=1&productId=1&quantity=2"
+
+# 测试参数验证
+curl -X POST "http://localhost:8080/api/cart/add?userId=0&productId=1&quantity=2"
+curl -X POST "http://localhost:8080/api/cart/add?userId=1&productId=0&quantity=2"
+curl -X POST "http://localhost:8080/api/cart/add?userId=1&productId=1&quantity=0"
+
+[2024-03-xx] 订单模块开发
+------------------------------------
+1. 数据库设计
+- 创建订单表(order)
+- 创建订单项表(order_item)
+- 添加必要的索引
+状态：✅ 完成
+
+2. 基础功能实现
+- 创建订单（从购物车）
+- 订单支付
+- 订单发货
+- 订单收货
+- 订单取消
+- 订单列表查询
+- 订单详情查询
+状态：✅ 完成
+
+3. 功能测试
+测试命令和结果：
+
+a. 创建订单：
+curl -X POST "http://localhost:8080/api/order/create" -H "Content-Type: application/json" -d "{\"userId\":1,\"cartIds\":[1,2]}"
+✅ 成功，返回订单信息
+
+b. 查看订单详情：
+curl "http://localhost:8080/api/order/detail/1"
+✅ 成功，显示订单详细信息
+
+c. 订单状态流转测试：
+# 支付订单
+curl -X PUT "http://localhost:8080/api/order/1/pay"
+✅ 成功，状态更新为待发货
+
+# 订单发货
+curl -X PUT "http://localhost:8080/api/order/1/deliver"
+✅ 成功，状态更新为待收货
+
+# 确认收货
+curl -X PUT "http://localhost:8080/api/order/1/confirm"
+✅ 成功，状态更新为已完成
+
+4. 业务逻辑验证
+- 订单状态流转正确性
+- 库存扣减和恢复
+- 商品销量更新
+状态：✅ 完成
+
+5. 下一步优化计划：
+- 添加订单超时自动取消功能
+- 实现订单支付接口对接
+- 添加订单物流信息
+- 实现订单评价功能
+- 添加订单退款功能
+
+[2024-12-08] 订单模块优化
+------------------------------------
+1. 完善订单创建功能
+   - 添加商品库存检查
+   - 添加订单总金额计算
+   - 添加订单项创建
+   - 添加库存和销量更新
+   - 添加购物车清理
+   - 添加详细日志记录
+
+2. 修复的问题
+   - 购物车ID不匹配问题
+   - 订单创建失败时的回滚处理
+   - 商品库存不足的检查
+   - 订单金额计算精度问题
+
+3. 接口测试记录
+   a. 添加商品到购物车：
+   ```bash
+   curl -X POST "http://localhost:8080/api/cart/add" \
+   -H "Content-Type: application/json" \
+   -d "{\"userId\": 1, \"productId\": 1, \"quantity\": 1}"
+   ```
+   结果：✅ 成功
+
+   b. 查看购物车列表：
+   ```bash
+   curl "http://localhost:8080/api/cart/list?userId=1"
+   ```
+   结果：✅ 成功，返回购物车商品列表
+
+   c. 创建订单：
+   ```bash
+   curl -X POST "http://localhost:8080/api/order/create" \
+   -H "Content-Type: application/json" \
+   -d "{\"userId\": 1, \"cartIds\": [18]}"
+   ```
+   结果：✅ 成功，返回订单信息
+
+   d. 查看订单详情：
+   ```bash
+   curl "http://localhost:8080/api/order/detail/返回的orderId"
+   ```
+   结果：✅ 成功，显示订单详细信息
+
+4. 问题修复记录
+   - 修复了购物车ID不匹配问题
+     * 原因：前端传入的是1，实际ID是18
+     * 解决：使用正确的购物车ID
+   - 修复了Date/LocalDateTime类型不匹配问题
+     * 原因：实体类使用LocalDateTime，但代码使用Date
+     * 解决：统一使用LocalDateTime
+
+5. 下一步计划
+   - 添加订单超时自动取消
+   - 实现订单支付功能
+   - 添加订单状态变更通知
+   - 实现订单退款功能
+
+[2024-12-08] 支付模块开发
+------------------------------------
+1. 基础功能实现
+   - 创建支付记录
+   - 支付回调处理
+   - 支付状态更新
+   - 订单状态联动
+   状态：✅ 完成
+
+2. 接口测试记录
+   a. 创建订单并发起支付：
+   ```bash
+   # 1. 添加商品到购物车
+   curl -X POST "http://localhost:8080/api/cart/add" \
+   -H "Content-Type: application/json" \
+   -d "{\"userId\": 1, \"productId\": 1, \"quantity\": 1}"
+
+   # 2. 创建订单
+   curl -X POST "http://localhost:8080/api/order/create" \
+   -H "Content-Type: application/json" \
+   -d "{\"userId\": 1, \"cartIds\": [18]}"
+
+   # 3. 发起支付
+   curl -X POST "http://localhost:8080/api/payment/create" \
+   -H "Content-Type: application/json" \
+   -d "{\"orderId\": 返回的orderId, \"paymentType\": 1}"
+   ```
+
+   b. 查询支付状态：
+   ```bash
+   curl "http://localhost:8080/api/payment/status/支付单号"
+   ```
+
+   c. 模拟支付回调：
+   ```bash
+   curl -X POST "http://localhost:8080/api/payment/callback?paymentNo=支付单号&success=true"
+   ```
+
+3. 问题修复记录
+   - 修复了Date/LocalDateTime类型不匹配
+     * 原因：实体类使用LocalDateTime，但代码使用Date
+     * 解决：统一使用LocalDateTime
+   - 修复了支付金额验证问题
+     * 添加了订单金额与支付金额的比对
+     * 添加了支付金额精度处理
+   - 完善了支付日志记录
+     * 添加了关键操作日志
+     * 添加了错误处理日志
+
+4. 下一步计划
+   - 实现支付宝支付
+     * 添加支付宝配置
+     * 实现支付接口调用
+     * 处理支付回调
+   - 实现微信支付
+     * 添加微信支付配置
+     * 实现支付接口调用
+     * 处理支付回调
+   - 优化支付体验
+     * 添加支付超时处理
+     * 添加支付进度查询
+     * 实现支付状态通知
+
+[2024-12-08] 支付宝支付对接
+------------------------------------
+1. 基础配置
+   - 添加支付宝SDK依赖
+   - 配置支付宝参数
+   - 初始化支付宝客户端
+   状态：✅ 完成
+
+2. 功能实现
+   - 创建支付订单
+   - 生成支付表单
+   - 处理支付回调
+   状态：⚡ 进行中
+
+3. 实现细节
+   a. 支付回调处理
+   - 添加异步通知接口
+   - 添加同步回调接口
+   - 实现签名验证
+   - 处理支付结果
+   状态：✅ 完成
+
+   b. 支付结果处理
+   - 验证支付金额
+   - 更新支付状态
+   - 更新订单状态
+   - 记录支付日志
+   状态：✅ 完成
+
+   c. 代码优化
+   - 合并重复的Controller
+     * 删除AlipayCallbackController
+     * 将功能合并到AlipayController
+   - 统一异常处理
+     * 添加全局异常处理
+     * 添加业务异常处理
+     * 添加参数验证异常处理
+   - 完善日志记录
+     * 添加详细的错误日志
+     * 统一日志格式
+   - 优化代码结构
+     * 删除重复代码
+     * 统一命名规范
+   状态：✅ 完成
+
+4. 安全性考虑
+   - 添加签名验证
+   - 添加金额验证
+   - 添加订单状态检查
+   - 添加幂等性处理
+   状态：⚡ 进行中
+
+5. 下一步计划
+   - 实现支付结果查询
+   - 实现退款功能
+   - 添加支付日志记录
+     * 创建支付日志表 ✅
+     * 实现日志记录服务 ✅
+     * 添加关键操作日志 ✅
+   - 实现订单关闭功能
+
+# 2024-12-08 开发日志
+
+## 微信支付功能开发 -第二阶段
+
+1. 完善了订单状态管理
+   - 重构了OrderStatus枚举
+   - 统一了订单状态定义
+   - 更新了订单状态流转逻辑
+
+2. 优化了订单实体类
+   - 修改了表名从`order`到`orders`（避免SQL关键字）
+   - 统一使用Date替代LocalDateTime
+   - 重命名totalPrice为totalAmount
+   - 添加了paymentNo字段
+
+3. 实现了支付结果处理
+   - 添加了WechatPayNotifyDTO
+   - 实现了支付结果验证
+   - 完善了订单状态更新逻辑
+
+4. 遇到的问题及解决方案
+   - LocalDateTime与Date类型不兼容
+     * 统一使用java.util.Date
+     * 更新了所有相关方法
+   - OrderStatus常量改为枚举
+     * 重构了状态判断逻辑
+     * 更新了状态描述获取方法
+   - 字段命名统一
+     * totalPrice改为totalAmount
+     * paymentTime改为payTime
+   - 支付状态管理
+     * 添加PaymentStatus枚举
+     * 统一支付状态定义
+     * 完善支付状态流转逻辑
+
+5. 待办事项
+   - 更新数据库表结构
+     * 创建orders表
+     * 创建order_item表
+     * 创建payment表
+     * 创建payment_log表
+   - 修改相关单元测试
+   - 更新接口文档
+   - 添加支付结果通知接口
+   - 更新支付宝和微信支付相关代码
+   - 统一时间类型和字段命名
+   - 完善支付状态查询功能
+     * 添加PaymentStatusDTO
+     * 实现getStatus方法
+     * 添加状态描述转换
+
+
+
+
+

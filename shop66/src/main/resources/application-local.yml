@@ -1,0 +1,10 @@
+wechat:
+  pay:
+    enabled: false  # 本地开发时默认禁用
+    app-id: ${WECHAT_PAY_SANDBOX_APP_ID:}  # 沙箱应用ID
+    mch-id: ${WECHAT_PAY_SANDBOX_MCH_ID:}  # 沙箱商户号
+    merchant-serial-number: ${WECHAT_PAY_SANDBOX_SERIAL_NO:}  # 沙箱证书序列号
+    api-v3-key: ${WECHAT_PAY_SANDBOX_API_V3_KEY:}  # 沙箱API v3密钥
+    merchant-private-key-path: classpath:cert/sandbox_apiclient_key.pem  # 沙箱私钥路径
+    notify-url: http://localhost:8080/api/payment/wechat/notify
+    return-url: http://localhost:8080/api/payment/wechat/return 

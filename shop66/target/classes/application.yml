@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mini_mall?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 07095637
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.mall.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.mall.task: DEBUG
+    com.mall.service: DEBUG
+
+alipay:
+  app-id: 你的APPID
+  private-key: 你的应用私钥
+  public-key: 支付宝公钥
+  notify-url: http://你的域名/api/payment/alipay/notify
+  return-url: http://你的域名/api/payment/alipay/return
+  server-url: https://openapi.alipay.com/gateway.do
+
+wechat:
+  pay:
+    app-id: ${WECHAT_PAY_APP_ID:your_app_id}  # 应用ID
+    mch-id: ${WECHAT_PAY_MCH_ID:your_mch_id}  # 商户号
+    merchant-serial-number: ${WECHAT_PAY_SERIAL_NO:your_serial_no}  # 商户证书序列号
+    api-v3-key: ${WECHAT_PAY_API_V3_KEY:your_api_v3_key}  # API v3密钥
+    merchant-private-key-path: classpath:cert/apiclient_key.pem  # 商户私钥路径
+    notify-url: ${WECHAT_PAY_NOTIFY_URL:http://your-domain.com/api/payment/wechat/notify}  # 支付结果通知地址
+    return-url: ${WECHAT_PAY_RETURN_URL:http://your-domain.com/api/payment/wechat/return}  # 支付完成跳转地址

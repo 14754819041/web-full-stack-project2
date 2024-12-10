@@ -1,0 +1,108 @@
+微商城API文档
+
+基础信息：
+- 基础路径：http://localhost:8080
+- 响应格式：JSON
+
+=== API列表 ===
+
+1. 用户模块
+POST /api/user/register - 用户注册
+请求体：
+{
+    "username": "string",
+    "password": "string",
+    "phone": "string"
+}
+
+POST /api/user/login - 用户登录
+参数：
+- username: string
+- password: string
+
+2. 商品模块
+GET /api/product/list - 获取商品列表
+参数：
+- keyword: string, 搜索关键字
+- categoryId: long, 分类ID
+- orderBy: string, 排序方式（price_asc/price_desc/sales_desc）
+- pageNum: int, 页码（默认1）
+- pageSize: int, 每页数量（默认10）
+- minPrice: double, 最低价格
+- maxPrice: double, 最高价格
+- minSales: int, 最低销量
+- inStock: boolean, 是否有库存
+
+GET /api/product/detail/{id} - 获取商品详情
+参数：
+- id: long, 商品ID
+
+3. 分类模块
+GET /api/category/list - 获取分类列表
+返回：所有分类的平铺列表
+
+GET /api/category/tree - 获取分类树
+返回：树形结构的分类数据 
+
+4. 购物车模块
+POST /api/cart/add - 添加商品到购物车
+参数：
+- userId: long, 用户ID
+- productId: long, 商品ID
+- quantity: int, 数量
+
+GET /api/cart/list - 获取购物车列表
+参数：
+- userId: long, 用户ID
+
+PUT /api/cart/update - 更新购物车商品数量
+参数：
+- userId: long, 用户ID
+- productId: long, 商品ID
+- quantity: int, 数量
+
+DELETE /api/cart/delete - 删除购物车商品
+参数：
+- userId: long, 用户ID
+- productId: long, 商品ID
+
+PUT /api/cart/selected - 更新商品选中状态
+参数：
+- userId: long, 用户ID
+- productId: long, 商品ID
+- selected: boolean, 是否选中 
+
+4. 订单模块
+POST /api/order/create - 创建订单
+请求体：
+{
+    "userId": long,
+    "cartIds": array[long]
+}
+
+GET /api/order/list - 获取订单列表
+参数：
+- userId: long
+- status: int, 可选 (0-待付款，1-待发货，2-待收货，3-已完成，4-已取消)
+- pageNum: int, 默认1
+- pageSize: int, 默认10
+
+GET /api/order/detail/{id} - 获取订单详情
+参数：
+- id: long
+
+PUT /api/order/{id}/pay - 支付订单
+参数：
+- id: long
+
+PUT /api/order/{id}/deliver - 订单发货
+参数：
+- id: long
+
+PUT /api/order/{id}/confirm - 确认收货
+参数：
+- id: long
+
+PUT /api/order/{id}/cancel - 取消订单
+参数：
+- id: long 
